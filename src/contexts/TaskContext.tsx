@@ -13,6 +13,8 @@ interface TaskState {
   sortOption: SortOption;
   sortAnchorEl: null | HTMLElement;
   moveMode: boolean;
+  dateFilter: "all" | "today" | "thisWeek" | "custom";
+  customDateRange: { start: Date | null; end: Date | null };
 }
 
 interface TaskActions {
@@ -33,6 +35,8 @@ interface TaskActions {
   setSortAnchorEl: Dispatch<SetStateAction<null | HTMLElement>>;
   setMoveMode: Dispatch<SetStateAction<boolean>>;
   updateCategory: (category: Partial<Category>) => void;
+  setDateFilter: Dispatch<SetStateAction<"all" | "today" | "thisweek" | "custom">>;
+  setCustomDateRange: Dispatch<SetStateAction<{ start: Date | null; end: Date | null }>>;
 }
 
 export type TaskContextType = TaskState & TaskActions;

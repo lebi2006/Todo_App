@@ -27,6 +27,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
 
   const [moveMode, setMoveMode] = useStorageState<boolean>(false, "moveMode", "sessionStorage");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "thisWeek" | "custom">("all");
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null,
+  });
 
   const sortOption = user.settings.sortOption;
   const setSortOption = useCallback(
@@ -161,6 +166,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       moveMode,
       setMoveMode,
       updateCategory,
+
+      dateFilter,
+      setDateFilter,
+      customDateRange,
+      setCustomDateRange,
     }),
     [
       selectedTaskId,
@@ -185,6 +195,9 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       moveMode,
       setMoveMode,
       updateCategory,
+
+      dateFilter,
+      customDateRange,
     ],
   );
 

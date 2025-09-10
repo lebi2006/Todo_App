@@ -22,6 +22,7 @@ import { useResponsiveDisplay } from "../hooks/useResponsiveDisplay";
 import { useNavigate } from "react-router-dom";
 import { AnimatedGreeting } from "../components/AnimatedGreeting";
 import { showToast } from "../utils";
+import FilterBar from "../components/FilterBar";
 
 const TasksList = lazy(() =>
   import("../components/tasks/TasksList").then((module) => ({ default: module.TasksList })),
@@ -194,6 +195,7 @@ const Home = () => {
           </TasksCount>
         </TasksCountContainer>
       )}
+      <FilterBar />
       <Suspense
         fallback={
           <Box display="flex" justifyContent="center" alignItems="center">

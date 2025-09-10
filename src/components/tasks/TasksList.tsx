@@ -22,6 +22,7 @@ import {
 } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useState, memo, useRef } from "react";
 import { CategoryBadge, CustomDialogTitle, EditTask, TaskItem } from "..";
+import { isToday, isThisWeek, isWithinRange } from "../../utils/dateUtils";
 import { TaskContext } from "../../contexts/TaskContext";
 import { UserContext } from "../../contexts/UserContext";
 import { useResponsiveDisplay } from "../../hooks/useResponsiveDisplay";
@@ -101,8 +102,30 @@ export const TasksList: React.FC = () => {
     sortOption,
     moveMode,
     setMoveMode,
+
+    dateFilter,
+    customDateRange,
   } = useContext(TaskContext);
   const open = Boolean(anchorEl);
+  // DEBUG: inspect task shapes to know which date field to use for filtering
+  useEffect(() => {
+    try {
+      console.log("DEBUG: total tasks =", user.tasks?.length ?? 0);
+      console.log(
+        "DEBUG: sample tasks (id, name, date, deadline, type of fields):",
+        (user.tasks || []).slice(0, 10).map((t) => ({
+          id: t.id,
+          name: t.name,
+          date: t.date,
+          deadline: t.deadline,
+          dateType: typeof t.date,
+          deadlineType: typeof t.deadline,
+        })),
+      );
+    } catch (err) {
+      console.warn("DEBUG: error logging tasks", err);
+    }
+  }, [user.tasks]);
 
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
@@ -233,7 +256,39 @@ export const TasksList: React.FC = () => {
     [search, selectedCatId, user.settings?.doneToBottom, sortOption],
   );
 
-  const orderedTasks = useMemo(() => reorderTasks(user.tasks), [user.tasks, reorderTasks]);
+  // Apply date-based filter (if any), then pass to existing reorder logic
+  const sourceTasks = useMemo(() => {
+    const all = user.tasks ?? [];
+    switch (dateFilter) {
+      case "today":
+        return all.filter((t) => {
+          const d = t.deadline ?? t.date;
+          return d && isToday(d);
+        });
+      case "thisWeek":
+        return all.filter((t) => {
+          const d = t.deadline ?? t.date;
+          return d && isThisWeek(d);
+        });
+      case "custom":
+        return all.filter((t) => {
+          const d = t.deadline ?? t.date;
+          if (!d) return false;
+          return isWithinRange(d, customDateRange?.start ?? null, customDateRange?.end ?? null);
+        });
+      default:
+        return all;
+    }
+  }, [user.tasks, dateFilter, customDateRange]);
+
+  const orderedTasks = useMemo(() => reorderTasks(sourceTasks), [sourceTasks, reorderTasks]);
+  useEffect(() => {
+    console.log("Filter applied:", dateFilter, "Custom range:", customDateRange);
+    console.log(
+      "Tasks after filter:",
+      sourceTasks.map((t) => t.name),
+    );
+  }, [dateFilter, customDateRange, sourceTasks]);
 
   const confirmDeleteTask = () => {
     if (!selectedTaskId) {
