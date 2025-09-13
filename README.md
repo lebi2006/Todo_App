@@ -117,3 +117,43 @@ The app will now be running at [http://localhost:5173/](http://localhost:5173/).
 
 licensed under [MIT](https://github.com/maciekt07/TodoApp/blob/main/LICENSE).
 
+# 📝 Todo App  
+
+A task management application with filtering, priority labeling, and intuitive UI.  
+This project was developed as part of an internship assignment.  
+
+---
+
+## 🚀 Features  
+- Add and edit tasks with **priority labels** (Critical, High, Medium).  
+- Filter tasks by **date range** (All, Today, This Week).  
+- Filter tasks by **status** (All, Pending, Completed).  
+- Filter tasks by **priority** (All, Critical, High, Medium).  
+- Interactive dashboard to view tasks and priorities at a glance.  
+
+---
+
+## 📸 Assignment Deliverables  
+
+### New Dashboard  
+![Dashboard](./screenshots/New_Dashboard.png)   
+
+### Tasks with Priority Labels  
+![Priority Labels](./screenshots/Tasks_With_Priority_Labels.png)  
+
+### Add Task with Priority Dropdown  
+![Add Task](./screenshots/Add_Task_With_Priority_Dropdown.png)  
+
+### Edit Task with Priority Dropdown  
+![Edit Task](./screenshots/Edit_Task_With_Priority_Dropdown.png)  
+
+---
+
+## Setup Instructions  
+
+1. Clone the repository  
+   ```bash
+   git clone https://github.com/lebi2006/Todo_App.git
+   cd Todo_App
+
+
