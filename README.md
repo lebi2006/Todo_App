@@ -136,16 +136,17 @@ This project was developed as part of an internship assignment.
 ## 📸 Assignment Deliverables  
 
 ### New Dashboard  
-![Dashboard](./screenshots/New_Dashboard.png)   
+<img src="https://raw.githubusercontent.com/lebi2006/Todo_App/main/screenshots/New_Dashboard.png" />
 
 ### Tasks with Priority Labels  
-![Priority Labels](./screenshots/Tasks_With_Priority_Labels.png)  
+<img src="https://raw.githubusercontent.com/lebi2006/Todo_App/main/screenshots/Tasks_With_Priority_Labels.png" />
 
 ### Add Task with Priority Dropdown  
-![Add Task](./screenshots/Add_Task_With_Priority_Dropdown.png)  
+<img src="https://raw.githubusercontent.com/lebi2006/Todo_App/main/screenshots/Add_Task_With_Priority_Dropdown.png" />
 
 ### Edit Task with Priority Dropdown  
-![Edit Task](./screenshots/Edit_Task_With_Priority_Dropdown.png)  
+<img src="https://raw.githubusercontent.com/lebi2006/Todo_App/main/screenshots/Edit_Task_With_Priority_Dropdown.png" />
+ 
 
 ---
 
