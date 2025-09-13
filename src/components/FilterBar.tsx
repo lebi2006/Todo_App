@@ -1,29 +1,39 @@
-// src/components/FilterBar.tsx
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Button, ButtonGroup, TextField } from "@mui/material";
-import { TaskContext, TaskContextType } from "../contexts/TaskContext";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
+import { TaskContext, TaskContextType, StatusFilterType, PriorityFilterType } from "../contexts/TaskContext";
 import { showToast } from "../utils";
 
-/**
- * FilterBar - wired to TaskContext.dateFilter & TaskContext.customDateRange
- * - Buttons: All, Today, This Week, Custom Range (start/end + Apply)
- */
 const FilterBar: React.FC = () => {
-  // ✅ Hook usage inside component
-  const { dateFilter, setDateFilter, customDateRange, setCustomDateRange } = useContext(
-    TaskContext,
-  ) as TaskContextType;
+  const ctx = useContext(TaskContext) as TaskContextType;
 
-  // local controlled inputs for date (value format: YYYY-MM-DD)
+  const dateFilter: "all" | "today" | "thisWeek" | "custom" = ctx?.dateFilter ?? "all";
+  const setDateFilter: (v: "all" | "today" | "thisWeek" | "custom") => void =
+    ctx?.setDateFilter ?? (() => {});
+  const customDateRange: { start: Date | null; end: Date | null } =
+    ctx?.customDateRange ?? { start: null, end: null };
+  const setCustomDateRange: (r: { start: Date | null; end: Date | null }) => void =
+    ctx?.setCustomDateRange ?? (() => {});
+
+  const statusFilter: StatusFilterType = ctx?.statusFilter ?? "all";
+  const setStatusFilter: (s: StatusFilterType) => void = ctx?.setStatusFilter ?? (() => {});
+
+  const priorityFilter: PriorityFilterType = ctx?.priorityFilter ?? "all";
+  const setPriorityFilter: (p: PriorityFilterType) => void = ctx?.setPriorityFilter ?? (() => {});
   const dateToInput = (d?: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
   const [start, setStart] = useState<string>(dateToInput(customDateRange?.start));
   const [end, setEnd] = useState<string>(dateToInput(customDateRange?.end));
 
-  // keep local inputs in sync when context changes externally
   useEffect(() => {
     setStart(dateToInput(customDateRange?.start));
     setEnd(dateToInput(customDateRange?.end));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customDateRange?.start?.toISOString?.(), customDateRange?.end?.toISOString?.()]);
 
   const applyRange = () => {
@@ -48,21 +58,23 @@ const FilterBar: React.FC = () => {
     setCustomDateRange({ start: null, end: null });
     setStart("");
     setEnd("");
+    setStatusFilter("all");
+    setPriorityFilter("all");
   };
 
   return (
-    <Box
-      component="section"
-      sx={{
-        mb: 2,
-        display: "flex",
-        gap: 2,
-        alignItems: "center",
-        flexWrap: "wrap",
-        p: 1,
-      }}
-      aria-label="task-date-filters"
-    >
+  <Box
+    component="section"
+    sx={{
+      mb: 2,
+      display: "flex",
+      flexDirection: "column", 
+      gap: 2,
+      p: 1,
+    }}
+    aria-label="task-date-filters"
+  >
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
       <ButtonGroup variant="outlined" size="small" aria-label="date filters">
         <Button
           onClick={() => setDateFilter("all")}
@@ -107,7 +119,50 @@ const FilterBar: React.FC = () => {
         Reset
       </Button>
     </Box>
-  );
+    <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+          Status:
+        </Typography>
+        <ToggleButtonGroup
+          size="small"
+          value={statusFilter}
+          exclusive
+          onChange={(_e, val) => {
+            if (val !== null) setStatusFilter(val as StatusFilterType);
+          }}
+          aria-label="status filter"
+        >
+          <ToggleButton value="all">All</ToggleButton>
+          <ToggleButton value="pending">Pending</ToggleButton>
+          <ToggleButton value="completed">Completed</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+          Priority:
+        </Typography>
+        <ToggleButtonGroup
+          size="small"
+          value={priorityFilter}
+          exclusive
+          onChange={(_e, val) => {
+            if (val !== null) setPriorityFilter(val as PriorityFilterType);
+          }}
+          aria-label="priority filter"
+        >
+          <ToggleButton value="all">All</ToggleButton>
+          <ToggleButton value="critical">Critical</ToggleButton>
+          <ToggleButton value="high">High</ToggleButton>
+          <ToggleButton value="medium">Medium</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+    </Box>
+  </Box>
+);
+
+
 };
 
 export default FilterBar;

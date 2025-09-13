@@ -2,11 +2,18 @@ import { ReactNode, useState, useCallback, useMemo, useContext } from "react";
 import { Category, SortOption, UUID } from "../types/user";
 import { useStorageState } from "../hooks/useStorageState";
 import { HighlightedText } from "../components/tasks/tasks.styled";
-import { TaskContext, TaskContextType } from "./TaskContext";
+import { TaskContext, TaskContextType, StatusFilterType, PriorityFilterType } from "./TaskContext";
 import { UserContext } from "../contexts/UserContext";
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const { user, setUser } = useContext(UserContext);
+
+  const priorities = user.settings?.priorities ?? [
+  { id: "critical", label: "Critical", color: "#E53935" },
+  { id: "high",     label: "High",     color: "#FB8C00" },
+  { id: "medium",   label: "Medium",   color: "#1E88E5" },
+];
+
 
   const [selectedTaskId, setSelectedTaskId] = useState<UUID | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -32,6 +39,9 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     start: null,
     end: null,
   });
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("all");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | "critical" | "high" | "medium">("all");
+
 
   const sortOption = user.settings.sortOption;
   const setSortOption = useCallback(
@@ -65,10 +75,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       setAnchorEl(null);
       setMultipleSelectedTasks((prevSelectedTaskIds) => {
         if (prevSelectedTaskIds.includes(taskId)) {
-          // Deselect the task if already selected
           return prevSelectedTaskIds.filter((id) => id !== taskId);
         } else {
-          // Select the task if not selected
           return [...prevSelectedTaskIds, taskId];
         }
       });
@@ -76,7 +84,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     [setMultipleSelectedTasks],
   );
 
-  // Memoize this function since it's used in render
   const highlightMatchingText = useCallback(
     (text: string) => {
       if (!search) {
@@ -96,7 +103,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const handleDeleteTask = useCallback(() => {
-    // Opens the delete task dialog
     if (selectedTaskId) {
       setDeleteDialogOpen(true);
     }
@@ -105,9 +111,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const handleCloseMoreMenu = useCallback(() => {
     setAnchorEl(null);
     document.body.style.overflow = "visible";
-    // if (selectedTaskId && !isMobile && expandedTasks.includes(selectedTaskId)) {
-    //   toggleShowMore(selectedTaskId);
-    // }
   }, []);
 
   const updateCategory = useCallback(
@@ -134,8 +137,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     },
     [setUser],
   );
-
-  // Memoize the context value to prevent recreation on every render
   const contextValue = useMemo<TaskContextType>(
     () => ({
       selectedTaskId,
@@ -171,6 +172,12 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       setDateFilter,
       customDateRange,
       setCustomDateRange,
+
+      statusFilter,
+      setStatusFilter,
+
+      priorityFilter,
+      setPriorityFilter,
     }),
     [
       selectedTaskId,
@@ -198,8 +205,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
       dateFilter,
       customDateRange,
+      statusFilter,
+      priorityFilter,
     ],
   );
 
   return <TaskContext.Provider value={contextValue}>{children}</TaskContext.Provider>;
 };
+

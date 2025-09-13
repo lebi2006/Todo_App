@@ -1,6 +1,5 @@
 import { isToday as dfIsToday, isThisWeek as dfIsThisWeek, isWithinInterval } from "date-fns";
 
-// Safe parser: handles Date | string | null
 function parseDate(date: Date | string | null | undefined): Date | null {
   if (!date) return null;
   return date instanceof Date ? date : new Date(date);
@@ -13,7 +12,7 @@ export function isToday(date: Date | string | null | undefined): boolean {
 
 export function isThisWeek(date: Date | string | null | undefined): boolean {
   const parsed = parseDate(date);
-  return parsed ? dfIsThisWeek(parsed, { weekStartsOn: 1 }) : false; // Monday as start
+  return parsed ? dfIsThisWeek(parsed, { weekStartsOn: 1 }) : false;
 }
 
 export function isWithinRange(
@@ -27,5 +26,12 @@ export function isWithinRange(
 
   if (!parsed || !parsedStart || !parsedEnd) return false;
 
-  return isWithinInterval(parsed, { start: parsedStart, end: parsedEnd });
+  const startOfDay = new Date(parsedStart);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(parsedEnd);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return isWithinInterval(parsed, { start: startOfDay, end: endOfDay });
 }
+

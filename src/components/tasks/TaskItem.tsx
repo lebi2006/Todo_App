@@ -3,6 +3,10 @@ import { Emoji } from "emoji-picker-react";
 import { DoneRounded, PushPinRounded, Link, DragIndicatorRounded } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
 import type { Task, UUID } from "../../types/user";
+import { Box, Typography } from "@mui/material";
+import { getFontColor } from "../../utils";
+import type { Priority } from "../../types/user";
+
 import {
   TaskContainer,
   EmojiContainer,
@@ -22,13 +26,49 @@ import {
   TaskActionsContainer,
   DragHandle,
 } from "./tasks.styled";
-import { calculateDateDifference, formatDate, getFontColor, systemInfo } from "../../utils";
+import { calculateDateDifference, formatDate, systemInfo } from "../../utils";
 import { RenderTaskDescription } from "./RenderTaskDescription";
 import { CategoryBadge } from "..";
 import { UserContext } from "../../contexts/UserContext";
 import { TaskContext } from "../../contexts/TaskContext";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+const PriorityBadge = ({ priority }: { priority?: Priority | null }) => {
+  if (!priority) return null;
+
+  const textColor = getFontColor(priority.color);
+
+  return (
+    <Box
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.5,
+        ml: 1,
+      }}
+    >
+      <Box
+        sx={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: priority.color,
+          flexShrink: 0,
+        }}
+      />
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 600,
+          color: textColor,
+          lineHeight: 1,
+        }}
+      >
+        {priority.label}
+      </Typography>
+    </Box>
+  );
+};
 
 interface TaskItemProps {
   task: Task;
@@ -48,10 +88,6 @@ interface TaskItemProps {
   blur?: boolean;
   textHighlighter?: (text: string) => React.ReactNode;
 }
-/**
- * A reusable task component that displays task information with configurable features.
- * used across different views (TasksList, Share, ShareDialog) with consistent styling but varied behavior.
- */
 export const TaskItem = memo(
   ({
     task,
@@ -65,8 +101,6 @@ export const TaskItem = memo(
     const { user } = useContext(UserContext);
     const { settings } = user;
     const { moveMode } = useContext(TaskContext);
-
-    // dnd-kit sortable logic
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
       id: task.id,
       disabled: !moveMode,
@@ -165,20 +199,22 @@ export const TaskItem = memo(
             </Pinned>
           )}
           <TaskHeader>
-            <TaskName done={task.done}>{textHighlighter(task.name)}</TaskName>
-            <Tooltip
-              title={
-                moveMode && enableMoveMode
-                  ? ""
-                  : new Intl.DateTimeFormat(navigator.language, {
-                      dateStyle: "full",
-                      timeStyle: "medium",
-                    }).format(new Date(task.date))
-              }
-            >
-              <TaskDate>{formatDate(new Date(task.date))}</TaskDate>
-            </Tooltip>
-          </TaskHeader>
+  <TaskName done={task.done}>{textHighlighter(task.name)}</TaskName>
+  <PriorityBadge priority={task.priority} />
+
+  <Tooltip
+    title={
+      moveMode && enableMoveMode
+        ? ""
+        : new Intl.DateTimeFormat(navigator.language, {
+            dateStyle: "full",
+            timeStyle: "medium",
+          }).format(new Date(task.date))
+    }
+  >
+    <TaskDate>{formatDate(new Date(task.date))}</TaskDate>
+  </Tooltip>
+</TaskHeader>
 
           <TaskDescription done={task.done}>
             <RenderTaskDescription

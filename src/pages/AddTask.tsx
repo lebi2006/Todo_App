@@ -14,6 +14,9 @@ import { ColorPalette } from "../theme/themeConfig";
 import InputThemeProvider from "../contexts/InputThemeProvider";
 import { CategorySelect } from "../components/CategorySelect";
 import { useToasterStore } from "react-hot-toast";
+import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import type { Priority } from "../../types/user";
+
 
 const AddTask = () => {
   const { user, setUser } = useContext(UserContext);
@@ -34,6 +37,8 @@ const AddTask = () => {
     "categories",
     "sessionStorage",
   );
+
+  const [priorityId, setPriorityId] = useState<string>("");
 
   const [isDeadlineFocused, setIsDeadlineFocused] = useState<boolean>(false);
 
@@ -97,8 +102,10 @@ const AddTask = () => {
     }
 
     if (nameError !== "" || descriptionError !== "") {
-      return; // Do not add the task if the name or description exceeds the maximum length
+      return;
     }
+    const priorityObj = user.settings?.priorities?.find((p: Priority) => p.id === priorityId) ?? null;
+
 
     const newTask: Task = {
       id: generateUUID(),
@@ -110,6 +117,7 @@ const AddTask = () => {
       color,
       date: new Date(),
       deadline: deadline !== "" ? new Date(deadline) : undefined,
+      priority: priorityObj,
       category: selectedCategories ? selectedCategories : [],
     };
 
@@ -144,7 +152,6 @@ const AddTask = () => {
           name={name}
           type="task"
         />
-        {/* fix for input colors */}
         <InputThemeProvider>
           <StyledInput
             label="Task Name"
@@ -183,6 +190,45 @@ const AddTask = () => {
                   : descriptionError
             }
           />
+<StyledInput
+  select
+  label="Priority"
+  size="small"
+  value={priorityId}
+  onChange={(e) => setPriorityId(e.target.value as string)}
+  sx={{ mt: 1, maxWidth: "400px" }}
+  SelectProps={{
+    displayEmpty: true,
+    renderValue: (val: string) => {
+      if (val === "" && priorityId === ""){ return <span />;}
+      if (val === "none")
+        {
+          return "None";
+        } 
+      const p = user.settings?.priorities?.find((x) => x.id === val);
+      return p ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 6, background: p.color }} />
+          <span>{p.label}</span>
+        </span>
+      ) : (
+        "None" 
+      );
+    },
+  }}
+>
+  <MenuItem value="none">
+    <em>None</em>
+  </MenuItem>
+  {user.settings?.priorities?.map((p: Priority) => (
+    <MenuItem key={p.id} value={p.id}>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <span style={{ width: 10, height: 10, borderRadius: 6, background: p.color }} />
+        <span>{p.label}</span>
+      </div>
+    </MenuItem>
+  ))}
+</StyledInput>
           <StyledInput
             label="Task Deadline"
             name="name"
@@ -192,7 +238,7 @@ const AddTask = () => {
             onChange={handleDeadlineChange}
             onFocus={() => setIsDeadlineFocused(true)}
             onBlur={() => setIsDeadlineFocused(false)}
-            hidetext={(!deadline || deadline === "") && !isDeadlineFocused} // fix for label overlapping with input
+            hidetext={(!deadline || deadline === "") && !isDeadlineFocused} 
             sx={{
               colorScheme: isDark(theme.secondary) ? "dark" : "light",
             }}

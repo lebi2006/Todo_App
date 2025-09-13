@@ -1,5 +1,8 @@
 import { Dispatch, ReactNode, SetStateAction, createContext } from "react";
 import type { Category, SortOption, UUID } from "../types/user";
+export type StatusFilterType = "all" | "pending" | "completed";
+export type PriorityFilterType = "all" | "high" | "medium" | "critical";
+
 
 interface TaskState {
   selectedTaskId: UUID | null;
@@ -15,6 +18,8 @@ interface TaskState {
   moveMode: boolean;
   dateFilter: "all" | "today" | "thisWeek" | "custom";
   customDateRange: { start: Date | null; end: Date | null };
+  statusFilter: StatusFilterType;
+  priorityFilter: PriorityFilterType;
 }
 
 interface TaskActions {
@@ -37,6 +42,8 @@ interface TaskActions {
   updateCategory: (category: Partial<Category>) => void;
   setDateFilter: Dispatch<SetStateAction<"all" | "today" | "thisweek" | "custom">>;
   setCustomDateRange: Dispatch<SetStateAction<{ start: Date | null; end: Date | null }>>;
+  setStatusFilter: Dispatch<SetStateAction<StatusFilterType>>;
+  setPriorityFilter: Dispatch<SetStateAction<PriorityFilterType>>;
 }
 
 export type TaskContextType = TaskState & TaskActions;

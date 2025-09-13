@@ -1,3 +1,4 @@
+import { TaskContext } from "../contexts/TaskContext";
 import { useContext, useMemo, lazy, Suspense, useEffect } from "react";
 import {
   AddButton,
@@ -30,6 +31,7 @@ const TasksList = lazy(() =>
 
 const Home = () => {
   const { user, setUser } = useContext(UserContext);
+  const { sourceTasks } = useContext(TaskContext);
   const { tasks, emojisStyle, settings, name } = user;
 
   const isOnline = useOnlineStatus();
@@ -39,14 +41,14 @@ const Home = () => {
   useEffect(() => {
     document.title = "Todo App";
   }, []);
+  const safeSourceTasks = sourceTasks ?? [];
 
-  // Calculate these values only when tasks change
   const taskStats = useMemo(() => {
-    const completedCount = tasks.filter((task) => task.done).length;
-    const completedPercentage = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
+    const completedCount = safeSourceTasks.filter((task) => task.done).length;
+    const completedPercentage = safeSourceTasks.length > 0 ? (completedCount / safeSourceTasks.length) * 100 : 0;
 
     const today = new Date().setHours(0, 0, 0, 0);
-    const dueTodayTasks = tasks.filter((task) => {
+    const dueTodayTasks = safeSourceTasks.filter((task) => {
       if (task.deadline) {
         const taskDeadline = new Date(task.deadline).setHours(0, 0, 0, 0);
         return taskDeadline === today && !task.done;
@@ -62,9 +64,8 @@ const Home = () => {
       tasksWithDeadlineTodayCount: dueTodayTasks.length,
       tasksDueTodayNames: taskNamesDueToday,
     };
-  }, [tasks]);
+  }, [safeSourceTasks]);
 
-  // Memoize time-based greeting
   const timeGreeting = useMemo(() => {
     const currentHour = new Date().getHours();
     if (currentHour < 12 && currentHour >= 5) {
@@ -76,7 +77,6 @@ const Home = () => {
     }
   }, []);
 
-  // Memoize task completion text
   const taskCompletionText = useMemo(() => {
     const percentage = taskStats.completedTaskPercentage;
     switch (true) {
@@ -203,7 +203,7 @@ const Home = () => {
           </Box>
         }
       >
-        <TasksList />
+        <TasksList tasks={sourceTasks} />
       </Suspense>
       {!isMobile && (
         <Tooltip title={tasks.length > 0 ? "Add New Task" : "Add Task"} placement="left">

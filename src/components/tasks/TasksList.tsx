@@ -77,10 +77,6 @@ const TaskMenuButton = memo(
     </IconButton>
   ),
 );
-
-/**
- * Component to display a list of tasks.
- */
 export const TasksList: React.FC = () => {
   const { user, setUser } = useContext(UserContext);
   const {
@@ -105,9 +101,10 @@ export const TasksList: React.FC = () => {
 
     dateFilter,
     customDateRange,
+    statusFilter,
+    priorityFilter,
   } = useContext(TaskContext);
   const open = Boolean(anchorEl);
-  // DEBUG: inspect task shapes to know which date field to use for filtering
   useEffect(() => {
     try {
       console.log("DEBUG: total tasks =", user.tasks?.length ?? 0);
@@ -126,9 +123,7 @@ export const TasksList: React.FC = () => {
       console.warn("DEBUG: error logging tasks", err);
     }
   }, [user.tasks]);
-
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[] | undefined>(undefined);
   const [selectedCatId, setSelectedCatId] = useStorageState<UUID | undefined>(
@@ -154,12 +149,8 @@ export const TasksList: React.FC = () => {
       }),
     [],
   );
-
-  // Handler for clicking the more options button in a task
   const handleClick = (event: React.MouseEvent<HTMLElement>, taskId: UUID) => {
     const target = event.target as HTMLElement;
-
-    // if clicking inside a task link, show native context menu and skip custom menu.
     if (target.closest("#task-description-link")) {
       return;
     }
@@ -172,13 +163,7 @@ export const TasksList: React.FC = () => {
       top: event.clientY,
       left: event.clientX,
     });
-
-    // if (!isMobile && !expandedTasks.includes(taskId)) {
-    //   toggleShowMore(taskId);
-    // }
   };
-
-  // focus search input on ctrl + /
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "/") {
@@ -193,27 +178,20 @@ export const TasksList: React.FC = () => {
 
   const reorderTasks = useCallback(
     (tasks: Task[]): Task[] => {
-      // Separate tasks into pinned and unpinned
       let pinnedTasks = tasks.filter((task) => task.pinned);
       let unpinnedTasks = tasks.filter((task) => !task.pinned);
-
-      // Filter tasks based on the selected category
       if (selectedCatId !== undefined) {
         const categoryFilter = (task: Task) =>
           task.category?.some((category) => category.id === selectedCatId) ?? false;
         unpinnedTasks = unpinnedTasks.filter(categoryFilter);
         pinnedTasks = pinnedTasks.filter(categoryFilter);
       }
-
-      // Filter tasks based on the search input
       const searchLower = search.toLowerCase();
       const searchFilter = (task: Task) =>
         task.name.toLowerCase().includes(searchLower) ||
         (task.description && task.description.toLowerCase().includes(searchLower));
       unpinnedTasks = unpinnedTasks.filter(searchFilter);
       pinnedTasks = pinnedTasks.filter(searchFilter);
-
-      // Sort tasks based on the selected sort option
       const sortTasks = (tasks: Task[]) => {
         switch (sortOption) {
           case "dateCreated":
@@ -240,11 +218,8 @@ export const TasksList: React.FC = () => {
             return tasks;
         }
       };
-
       unpinnedTasks = sortTasks(unpinnedTasks);
       pinnedTasks = sortTasks(pinnedTasks);
-
-      // Move done tasks to bottom if the setting is enabled
       if (user.settings?.doneToBottom) {
         const doneTasks = unpinnedTasks.filter((task) => task.done);
         const notDoneTasks = unpinnedTasks.filter((task) => !task.done);
@@ -255,31 +230,70 @@ export const TasksList: React.FC = () => {
     },
     [search, selectedCatId, user.settings?.doneToBottom, sortOption],
   );
-
-  // Apply date-based filter (if any), then pass to existing reorder logic
   const sourceTasks = useMemo(() => {
     const all = user.tasks ?? [];
-    switch (dateFilter) {
-      case "today":
-        return all.filter((t) => {
-          const d = t.deadline ?? t.date;
-          return d && isToday(d);
-        });
-      case "thisWeek":
-        return all.filter((t) => {
-          const d = t.deadline ?? t.date;
-          return d && isThisWeek(d);
-        });
-      case "custom":
-        return all.filter((t) => {
-          const d = t.deadline ?? t.date;
-          if (!d) return false;
-          return isWithinRange(d, customDateRange?.start ?? null, customDateRange?.end ?? null);
-        });
-      default:
-        return all;
-    }
-  }, [user.tasks, dateFilter, customDateRange]);
+    const dateFiltered = (() => {
+      switch (dateFilter) {
+        case "today":
+          return all.filter((t) => {
+            const d = t.deadline ?? t.date;
+            return d && isToday(d);
+          });
+        case "thisWeek":
+          return all.filter((t) => {
+            const d = t.deadline ?? t.date;
+            return d && isThisWeek(d);
+          });
+        case "custom":
+          return all.filter((t) => {
+            const d = t.deadline ?? t.date;
+            if (!d) return false;
+            return isWithinRange(
+              d,
+              customDateRange?.start ?? null,
+              customDateRange?.end ?? null
+            );
+          });
+        default:
+          return all;
+      }
+    })();
+
+    const statusFiltered = dateFiltered.filter((t) => {
+      switch (statusFilter) {
+        case "pending":
+          return !t.done;
+        case "completed":
+          return !!t.done;
+        default:
+          return true;
+      }
+    });
+      const priorityFiltered = statusFiltered.filter((t) => {
+        if (priorityFilter === "all") return true;
+      const p = t.priority; 
+      const key =
+        p && typeof p === "object"
+        ? (p.id as string) ?? (p.label?.toLowerCase() as string | undefined)
+        : (p as unknown as string | undefined);
+
+      if (!key) return false;
+
+      return key === priorityFilter;
+  });
+
+  return priorityFiltered;
+
+  }, [user.tasks, dateFilter, customDateRange, statusFilter, priorityFilter]);
+
+  useEffect(() => {
+    console.debug("Filters:", { dateFilter, statusFilter, customDateRange });
+    console.debug(
+      "sourceTasks count:",
+      sourceTasks.length,
+      sourceTasks.map((t) => ({ id: t.id, name: t.name, done: t.done }))
+    );
+  }, [dateFilter, statusFilter, customDateRange, sourceTasks]);  
 
   const orderedTasks = useMemo(() => reorderTasks(sourceTasks), [sourceTasks, reorderTasks]);
   useEffect(() => {
@@ -317,7 +331,6 @@ export const TasksList: React.FC = () => {
   }, [selectedTaskId, deleteDialogOpen, user.tasks]);
 
   const cancelDeleteTask = () => {
-    // Cancels the delete task operation
     setDeleteDialogOpen(false);
   };
 
@@ -326,13 +339,11 @@ export const TasksList: React.FC = () => {
       ...prevUser,
       tasks: prevUser.tasks.map((task) => {
         if (multipleSelectedTasks.includes(task.id)) {
-          // Mark the task as done if selected
           return { ...task, done: true, lastSave: new Date() };
         }
         return task;
       }),
     }));
-    // Clear the selected task IDs after the operation
     setMultipleSelectedTasks([]);
   };
 
@@ -352,7 +363,6 @@ export const TasksList: React.FC = () => {
       }
     });
 
-    // Calculate category counts
     const counts: { [categoryId: UUID]: number } = {};
     uniqueCategories.forEach((category) => {
       const categoryTasks = tasks.filter((task) =>
@@ -361,7 +371,6 @@ export const TasksList: React.FC = () => {
       counts[category.id] = categoryTasks.length;
     });
 
-    // sort categories by count (descending) then by name (ascending) if counts are equal
     uniqueCategories.sort((a, b) => {
       const countA = counts[a.id] || 0;
       const countB = counts[b.id] || 0;
@@ -416,7 +425,6 @@ export const TasksList: React.FC = () => {
 
   useEffect(() => {
     checkOverdueTasks(user.tasks);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dndKitSensors = useSensors(
@@ -436,9 +444,7 @@ export const TasksList: React.FC = () => {
     const newIndex = orderedTasks.findIndex((task) => task.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    // calculate new positions for all tasks in the new order
     const newOrdered = arrayMove(orderedTasks, oldIndex, newIndex);
-    // assign position as index
     const updatedTasks = user.tasks.map((task) => {
       const idx = newOrdered.findIndex((t) => t.id === task.id);
       return idx !== -1 ? { ...task, position: idx, lastSave: new Date() } : task;
@@ -562,7 +568,6 @@ export const TasksList: React.FC = () => {
                 )}
               </span>
             </div>
-            {/* TODO: add more features */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Tooltip title="Mark selected as done">
                 <IconButton
@@ -614,7 +619,6 @@ export const TasksList: React.FC = () => {
             </b>
           </div>
         )}
-        {/* FIXME: dry */}
         {user.tasks.length !== 0 ? (
           moveMode ? (
             <DndContext
@@ -666,7 +670,6 @@ export const TasksList: React.FC = () => {
                   easing: "ease-in-out",
                 }}
               >
-                {/* DRAG PREVIEW */}
                 {activeDragId ? (
                   <TaskItem
                     task={orderedTasks.find((t) => t.id === activeDragId)!}
@@ -795,7 +798,6 @@ export const TasksList: React.FC = () => {
                   ...multipleSelectedTasks.filter((id) => !prevUser.deletedTasks?.includes(id)),
                 ],
               }));
-              // Clear the selected task IDs after the operation
               setMultipleSelectedTasks([]);
               setDeleteSelectedOpen(false);
             }}

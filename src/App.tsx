@@ -19,10 +19,7 @@ function App() {
   const { user, setUser } = useContext(UserContext);
   const systemTheme = useSystemTheme();
 
-  // Initialize user properties if they are undefined
-  // this allows to add new properties to the user object without error
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateNestedProperties = (userObject: any, defaultObject: any): any => {
       if (!userObject) return defaultObject;
 

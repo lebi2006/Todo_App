@@ -20,22 +20,21 @@ import { formatDate, showToast, timeAgo } from "../../utils";
 import { useTheme } from "@emotion/react";
 import { ColorPalette } from "../../theme/themeConfig";
 import { CategorySelect } from "../CategorySelect";
-
+import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import type { Priority } from "../../types/user";
 interface EditTaskProps {
   open: boolean;
   task?: Task;
   onClose: () => void;
 }
-
 export const EditTask = ({ open, task, onClose }: EditTaskProps) => {
   const { user, setUser } = useContext(UserContext);
   const { settings } = user;
   const [editedTask, setEditedTask] = useState<Task | undefined>(task);
   const [emoji, setEmoji] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
-
+  const [priorityId, setPriorityId] = useState<string | "">(task?.priority?.id ?? "");
   const theme = useTheme();
-
   const nameError = useMemo(
     () => (editedTask?.name ? editedTask.name.length > TASK_NAME_MAX_LENGTH : undefined),
     [editedTask?.name],
@@ -45,63 +44,56 @@ export const EditTask = ({ open, task, onClose }: EditTaskProps) => {
       editedTask?.description ? editedTask.description.length > DESCRIPTION_MAX_LENGTH : undefined,
     [editedTask?.description],
   );
-
-  // Effect hook to update the editedTask with the selected emoji.
   useEffect(() => {
     setEditedTask((prevTask) => ({
       ...(prevTask as Task),
       emoji: emoji || undefined,
     }));
   }, [emoji]);
-
-  // Effect hook to update the editedTask when the task prop changes.
   useEffect(() => {
     setEditedTask(task);
     setSelectedCategories(task?.category as Category[]);
   }, [task]);
-
-  // Event handler for input changes in the form fields.
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-
-    // Update the editedTask state with the changed value.
     setEditedTask((prevTask) => ({
       ...(prevTask as Task),
       [name]: value,
     }));
   };
-  // Event handler for saving the edited task.
   const handleSave = () => {
-    document.body.style.overflow = "auto";
-    if (editedTask && !nameError && !descriptionError) {
-      const updatedTasks = user.tasks.map((task) => {
-        if (task.id === editedTask.id) {
-          return {
-            ...task,
-            name: editedTask.name,
-            color: editedTask.color,
-            emoji: editedTask.emoji || undefined,
-            description: editedTask.description || undefined,
-            deadline: editedTask.deadline || undefined,
-            category: editedTask.category || undefined,
-            lastSave: new Date(),
-          };
-        }
-        return task;
-      });
-      setUser((prevUser) => ({
-        ...prevUser,
-        tasks: updatedTasks,
-      }));
-      onClose();
-      showToast(
-        <div>
-          Task <b translate="no">{editedTask.name}</b> updated.
-        </div>,
-      );
-    }
-  };
-
+  document.body.style.overflow = "auto";
+  if (editedTask && !nameError && !descriptionError) {
+    const priorityObj =
+      user.settings?.priorities?.find((p: Priority) => p.id === priorityId) ?? null;
+    const updatedTasks = user.tasks.map((task) => {
+      if (task.id === editedTask.id) {
+        return {
+          ...task,
+          name: editedTask.name,
+          color: editedTask.color,
+          emoji: editedTask.emoji || undefined,
+          description: editedTask.description || undefined,
+          deadline: editedTask.deadline || undefined,
+          category: editedTask.category || undefined,
+          priority: priorityObj,
+          lastSave: new Date(),
+        };
+      }
+      return task;
+    });
+    setUser((prevUser) => ({
+      ...prevUser,
+      tasks: updatedTasks,
+    }));
+    onClose();
+    showToast(
+      <div>
+        Task <b translate="no">{editedTask.name}</b> updated.
+      </div>,
+    );
+  }
+};
   const handleCancel = () => {
     onClose();
     setEditedTask(task);
@@ -114,7 +106,6 @@ export const EditTask = ({ open, task, onClose }: EditTaskProps) => {
       category: (selectedCategories as Category[]) || undefined,
     }));
   }, [selectedCategories]);
-
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (JSON.stringify(editedTask) !== JSON.stringify(task) && open) {
@@ -123,14 +114,11 @@ export const EditTask = ({ open, task, onClose }: EditTaskProps) => {
         return message;
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [editedTask, open, task]);
-
   return (
     <Dialog
       open={open}
@@ -200,6 +188,38 @@ export const EditTask = ({ open, task, onClose }: EditTaskProps) => {
                 : `${editedTask?.description?.length}/${DESCRIPTION_MAX_LENGTH}`
           }
         />
+<FormControl size="small" fullWidth sx={{ mt: 1 }}>
+  <InputLabel id="priority-select-label">Priority</InputLabel>
+  <Select
+    labelId="priority-select-label"
+    label="Priority"
+    value={priorityId}
+    onChange={(e) => setPriorityId(e.target.value as string)}
+    renderValue={(val) => {
+      const p = user.settings?.priorities?.find((x) => x.id === val);
+      return p ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 6, background: p.color }} />
+          <span>{p.label}</span>
+        </span>
+      ) : (
+        "None"
+      );
+    }}
+  >
+ <MenuItem value="">
+      <em>None</em>
+    </MenuItem>
+    {user.settings?.priorities?.map((p: Priority) => (
+      <MenuItem key={p.id} value={p.id}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 6, background: p.color }} />
+          <span>{p.label}</span>
+        </div>
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
         <StyledInput
           label="Deadline date"
           name="deadline"

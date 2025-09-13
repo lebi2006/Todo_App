@@ -1,10 +1,14 @@
 import { EmojiStyle } from "emoji-picker-react";
 import type { User } from "../types/user";
 import { systemInfo } from "../utils";
+import { UUID } from "../types/user";
 
-/**
- * Represents a default user object.
- */
+const defaultPriorities = [
+  { id: "critical" as UUID, label: "Critical", color: "#E53935" }, 
+  { id: "high" as UUID,     label: "High",     color: "#FB8C00" }, 
+  { id: "medium" as UUID,   label: "Medium",   color: "#1E88E5" }, 
+];
+
 export const defaultUser: User = {
   name: null,
   createdAt: new Date(),
@@ -27,6 +31,7 @@ export const defaultUser: User = {
     showProgressBar: true,
     sortOption: "dateCreated",
     reduceMotion: "system",
+    priorities: defaultPriorities,
   },
   categories: [
     { id: "857f0db6-43b2-43eb-8143-ec4e26472516", name: "Home", emoji: "1f3e0", color: "#53e45d" },
@@ -58,7 +63,6 @@ export const defaultUser: User = {
   ],
   deletedCategories: [],
   favoriteCategories: ["ebe6ce8b-471f-4632-a23b-578e1038ce51"],
-  //TODO: make default colors better
   colorList: [
     "#FF69B4",
     "#FF22B4",

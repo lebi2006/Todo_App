@@ -11,11 +11,9 @@ import { CircularProgress } from "@mui/material";
 import toast from "react-hot-toast";
 import { TaskProvider } from "./contexts/TaskProvider.tsx";
 
-// initialize ntc colors
 initColors(ORIGINAL_COLORS);
 
 const offlinePreparationCount = parseInt(
-  // prevent toast from showing infinitely on older versions of the app
   localStorage.getItem("offlinePreparationCount") || "0",
   10,
 );
@@ -35,7 +33,6 @@ if (
   localStorage.setItem("offlinePreparationCount", (offlinePreparationCount + 1).toString());
 }
 
-// Show a prompt to update the app when a new version is available
 registerSW({
   onRegistered(r) {
     if (r) {
@@ -52,7 +49,6 @@ registerSW({
   },
 });
 
-// Listen for the `SKIP_WAITING` message and reload the page when the new SW takes over
 navigator.serviceWorker?.addEventListener("controllerchange", () => {
   window.location.reload();
 });
