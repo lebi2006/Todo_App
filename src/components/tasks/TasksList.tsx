@@ -61,6 +61,8 @@ import {
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import DisabledThemeProvider from "../../contexts/DisabledThemeProvider";
+import TaskCard from "../TaskCard";
+
 
 const TaskMenuButton = memo(
   ({ task, onClick }: { task: Task; onClick: (event: React.MouseEvent<HTMLElement>) => void }) => (
@@ -634,7 +636,7 @@ export const TasksList: React.FC = () => {
                 strategy={verticalListSortingStrategy}
               >
                 {orderedTasks.map((task) => (
-                  <TaskItem
+                  <TaskCard
                     key={task.id}
                     task={task}
                     features={{
