@@ -135,6 +135,13 @@ This project was developed as part of an internship assignment.
 
 ## 📸 Assignment Deliverables  
 
+##  Deliverables Checklist
+- FilterBar component for date-based filters  
+- PriorityBadge component for customizable priority labels  
+- TaskCard component with priority display  
+- Updated README with screenshots  
+
+
 ### New Dashboard  
 <img src="https://raw.githubusercontent.com/lebi2006/Todo_App/main/screenshots/New_Dashboard.png" />
 
