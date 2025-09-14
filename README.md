@@ -117,7 +117,7 @@ The app will now be running at [http://localhost:5173/](http://localhost:5173/).
 
 licensed under [MIT](https://github.com/maciekt07/TodoApp/blob/main/LICENSE).
 
-# 📝 Todo App  
+# 📝 Todo App Enhancements
 
 A task management application with filtering, priority labeling, and intuitive UI.  
 This project was developed as part of an internship assignment.  
